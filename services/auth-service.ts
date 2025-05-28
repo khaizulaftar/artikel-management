@@ -1,44 +1,58 @@
-import axios from "axios";
+import { api } from "@/lib/api";
 
-const API_BASE_URL = "https://test-fe.mysellerpintar.com";
+interface AuthResponse {
+    token: string;
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        role: 'user' | 'admin';
+    };
+}
 
-export const login = async (email: string, password: string) => {
+export const register = async (data: {
+    name: string;
+    email: string;
+    password: string;
+}): Promise<AuthResponse> => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-            email,
-            password,
+        const response = await api.post<AuthResponse>("/auth/register", {
+            ...data,
+            role: "user" // Default role
         });
+
+        // Simpan token dan data user
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
         return response.data;
-    } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Login failed. Please try again."
-        );
+    } catch (error) {
+        console.error("Registration error:", error);
+        throw error; // Error sudah diformat oleh interceptor
     }
 };
 
-export const register = async (name: string, email: string, password: string) => {
+export const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/auth/register`, {
-            name,
-            email,
-            password,
-            role: "user", // Default role is user
-        });
+        const response = await api.post<AuthResponse>("/auth/login", { email, password });
+
+        // Simpan token dan data user
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
         return response.data;
-    } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Registration failed. Please try again."
-        );
+    } catch (error) {
+        console.error("Login error:", error);
+        throw error; // Error sudah diformat oleh interceptor
     }
 };
 
-export const logout = async () => {
+export const logout = async (): Promise<void> => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/auth/logout`);
-        return response.data;
-    } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Logout failed. Please try again."
-        );
+        await api.post("/auth/logout");
+    } finally {
+        // Bersihkan storage
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
     }
 };

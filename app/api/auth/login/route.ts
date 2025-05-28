@@ -7,12 +7,11 @@ export async function POST(request: Request) {
         const body = await request.json()
         const validatedData = loginSchema.parse(body)
 
-        // Simulasi response API
         return NextResponse.json({
             success: true,
             message: "Login berhasil",
             data: {
-                token: "simulated-token",
+                token: "dummy-jwt-token",
                 user: {
                     id: "1",
                     name: validatedData.email.split("@")[0],
@@ -29,7 +28,7 @@ export async function POST(request: Request) {
             )
         }
         return NextResponse.json(
-            { success: false, message: "Terjadi kesalahan" },
+            { success: false, message: "Login gagal" },
             { status: 500 }
         )
     }
